@@ -4,7 +4,6 @@ import sys
 import json
 from chromadb import PersistentClient
 from sentence_transformers import SentenceTransformer
-import requests
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -19,7 +18,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 CHROMA_DB_DIR = "./database/chroma_db"
 COLLECTION_NAME = "data_collection"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-QA_ENGINE = "openai"  # openai or ollama
 
 def answer_with_openai(prompt):
     response = openai_client.chat.completions.create(
@@ -27,31 +25,6 @@ def answer_with_openai(prompt):
         messages=[{"role": "user", "content": prompt}]
     )
     return response.choices[0].message.content
-
-def answer_with_ollama(prompt):
-    OLLAMA_URL = "http://localhost:11434/api/generate"
-    OLLAMA_MODEL = "deepseek-v3.1:671b-cloud" # deepseek-v3.1:671b-cloud or llama3.2
-
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt
-    }
-    response = requests.post(OLLAMA_URL, json=payload, stream=True)
-    if response.status_code == 200:
-        full_response = ""
-        try:
-            for line in response.iter_lines():
-                if line:
-                    try:
-                        data = json.loads(line.decode('utf-8'))
-                        full_response += data.get("response", "")
-                    except Exception:
-                        pass
-            return full_response.strip()
-        except Exception as e:
-            return f"Error parsing Ollama response: {e}"
-    else:
-        return f"Ollama API error: {response.status_code}\n{response.text}"
 
 if __name__ == "__main__":
     start_time = time.time()
@@ -72,17 +45,7 @@ if __name__ == "__main__":
         for doc, meta in zip(retrieved_docs, retrieved_metas)
     )
     prompt = f"Use the following context to answer the question.\nContext:\n{context}\n\nQuestion: {user_query}\nAnswer:"
-    answer = ""
-
-    print(prompt)
-    exit()
-
-    if QA_ENGINE == "openai":
-        answer = answer_with_openai(prompt)
-    elif QA_ENGINE == "ollama":
-        answer = answer_with_ollama(prompt)
-    else:
-        print(f"Unknown QA_ENGINE '{QA_ENGINE}'. Please set QA_ENGINE to 'openai' or 'ollama'.")
+    answer = answer_with_openai(prompt)
     
     print(answer)
     end_time = time.time()
