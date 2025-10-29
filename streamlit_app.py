@@ -29,7 +29,7 @@ else:
     # Clean up code block markers if present
     code_str = code_str.strip().removeprefix("```python").removeprefix("```").removesuffix("```")
 
-    if success and :
+    if success:
         print('Code: ',  code_str)
         try:
             exec(code_str, globals(), locals())

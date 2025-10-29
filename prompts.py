@@ -1,4 +1,4 @@
-def relevant_dfs_selection_prompt(user_query, dfs_formatted):
+def prompt_relevant_dfs(user_query, dfs_formatted):
     return (
         "You are given several sampled DataFrames from CSV files (random rows, to help understand the content as a whole). "
         "Your task is to determine which DataFrames are needed to answer the user's question. "
@@ -13,7 +13,7 @@ def relevant_dfs_selection_prompt(user_query, dfs_formatted):
         f"Sampled DataFrames:\n{dfs_formatted}\n\n"
     )
 
-def relevant_dfs_python_code(user_query, dfs_formatted):
+def prompt_python_code(user_query, dfs_formatted):
     return (
         "You are given several sampled DataFrames from CSV files (random rows, to help understand the content as a whole). "
         "Your task is to examine the user question and the sampled DataFrames, and return ONLY the Python code that will transform the relevant data into a Streamlit chart according to the user query request. "
