@@ -1,5 +1,7 @@
 import os
 import ast
+import logging
+from pathlib import Path
 import pandas as pd
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -8,26 +10,24 @@ from prompts import prompt_relevant_dfs, prompt_python_code, prompt_improve_code
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY", "")
 if not openai_api_key:
-    print("Warning: OPENAI_API_KEY not set in .env file.")
+    logging.warning("OPENAI_API_KEY not set in .env file.")
 openai_client = OpenAI(api_key=openai_api_key)
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-CSV_FOLDER = "./files"
+CSV_FOLDER = Path("./files")
 
-def load_and_sample_csvs(folder):
+def load_and_sample_csvs(folder: Path):
     dfs = {}
-    for filename in os.listdir(folder):
-        if filename.endswith(".csv"):
-            filepath = os.path.join(folder, filename)
-            name, _ = os.path.splitext(filename)
-            dfs[name] = pd.read_csv(filepath)
+    for file in folder.iterdir():
+        if file.suffix == ".csv" and file.is_file():
+            name = file.stem
+            dfs[name] = pd.read_csv(file)
     return dfs
 
 def format_dfs_for_prompt(dfs):
     formatted = []
     for name, df in dfs.items():
         sample_size = min(5, len(df))
-        # formatted.append(f"DataFrame: {name}\n{df.sample(sample_size).to_markdown(index=False)}\n")
         formatted.append(f"DataFrame: {name}\n{df.sample(sample_size).to_csv(index=False, header=True, lineterminator='; ')}\n")
     return "\n".join(formatted)
 

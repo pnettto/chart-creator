@@ -26,16 +26,3 @@ def prompt_python_code(user_query, dfs_formatted):
         f"User question: {user_query}\n\n"
         f"Sampled DataFrames:\n{dfs_formatted}\n\n"
     )
-
-def prompt_improve_code(improvement_query, code_str):
-    return (
-        "You are given a piece of Python code and a request to improve or modify it. "
-        "Your task is to return ONLY the improved or modified Python code according to the user's request. "
-        "Assume that pandas (pd) and numpy (np) are available so no need to import them. "
-        "The code will be executed in a Streamlit environment, so you can use Streamlit functions (such as st.line_chart, st.bar_chart, st.pyplot, etc.) to output the chart directly. "
-        "Do not include any explanations, comments, or markdown code blocks—return only the Python code required to generate the chart. \n\n"
-        "Do not use markdown code block. The format should be Python code that could be used with exec(). Only the code that will be executed, not the actual exec() call.\n\n"
-        "If the user question cannot be answered with a chart using the provided DataFrames, respond with: error\n\n"
-        f"Improvement request: {improvement_query}\n\n"
-        f"Original code:\n{code_str}\n\n"
-    )

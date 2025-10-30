@@ -3,12 +3,12 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from llm import generate_chart_code, generate_improved_chart
+from llm import generate_chart_code
 
-st.set_page_config(page_title="Query Chart App", layout="wide")
+st.set_page_config(page_title="Natural Chart Creator", layout="wide")
 
-st.title("Query Chart App")
-# Use session state to manage flow
+st.title("Natural Chart Creator")
+
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 if "query" not in st.session_state:
@@ -29,18 +29,7 @@ else:
     success, code_str, dfs = generate_chart_code(st.session_state.query)
     if success:
         try:
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                exec(code_str, globals(), locals())
-                
-            with col2:
-                st.header("Improve Chart")
-                improvement = st.text_input("Describe your improvement", key="improvement_input")
-                if st.button("Submit Improvement", key="improve_btn"):
-                    if improvement:
-                        st.session_state.query = st.session_state.query + " " + improvement
-                        st.session_state.submitted = True
-                        st.rerun()
+            exec(code_str, globals(), locals())
         except Exception as e:
             st.write(f'There was an error, try again.')
             st.code(e)
