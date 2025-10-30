@@ -15,14 +15,27 @@ def prompt_relevant_dfs(user_query, dfs_formatted):
 
 def prompt_python_code(user_query, dfs_formatted):
     return (
-        "You are given several sampled DataFrames from CSV files (random rows, to help understand the content as a whole). "
-        "Your task is to examine the user question and the sampled DataFrames, and return ONLY the Python code that will transform the relevant data into a Streamlit chart according to the user query request. "
-        "Assume that each DataFrame is already loaded and assigned to a variable named dfs['dataframe_name']. "
-        "Also assume that pandas (pd) and numpy (np) are available so no need to import them. "
+        "Given several sampled DataFrames from CSV files, your task is to generate ONLY the Python code to create a Streamlit chart that answers the user's question. "
+        "Each DataFrame is loaded as dfs['dataframe_name'], so never use the dataframe name directly, always use it as a key of the dfs dict."
+        "pandas (pd), numpy (np), Streamlit (st), and Altair (alt) are available. DO NOT add imports for them or anything else. "
+        "You must always create charts using st.altair_chart. Any kind of Altair chart (bar, line, scatter, etc.) may be used as appropriate. "
+        "Return only executable Python code—no explanations, comments, or markdown code blocks. "
+        "Do NOT use markdown code syntax (such as triple backticks or ```python) in your response. "
+        "Comment all lines to explain your reasoning in creating them. "
+        "If a chart cannot be created from the provided DataFrames, respond with and error explainig why not.\n\n"
+        f"User question: {user_query}\n\n"
+        f"Sampled DataFrames:\n{dfs_formatted}\n\n"
+    )
+
+def prompt_improve_code(improvement_query, code_str):
+    return (
+        "You are given a piece of Python code and a request to improve or modify it. "
+        "Your task is to return ONLY the improved or modified Python code according to the user's request. "
+        "Assume that pandas (pd) and numpy (np) are available so no need to import them. "
         "The code will be executed in a Streamlit environment, so you can use Streamlit functions (such as st.line_chart, st.bar_chart, st.pyplot, etc.) to output the chart directly. "
         "Do not include any explanations, comments, or markdown code blocks—return only the Python code required to generate the chart. \n\n"
         "Do not use markdown code block. The format should be Python code that could be used with exec(). Only the code that will be executed, not the actual exec() call.\n\n"
         "If the user question cannot be answered with a chart using the provided DataFrames, respond with: error\n\n"
-        f"User question: {user_query}\n\n"
-        f"Sampled DataFrames:\n{dfs_formatted}\n\n"
+        f"Improvement request: {improvement_query}\n\n"
+        f"Original code:\n{code_str}\n\n"
     )

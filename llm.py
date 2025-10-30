@@ -3,7 +3,7 @@ import ast
 import pandas as pd
 from openai import OpenAI
 from dotenv import load_dotenv
-from prompts import prompt_relevant_dfs, prompt_python_code
+from prompts import prompt_relevant_dfs, prompt_python_code, prompt_improve_code
 
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY", "")
@@ -53,6 +53,19 @@ def generate_chart_code(user_query: str):
         selected_dfs = {df_key: dfs[df_key] for df_key in relevant_dfs}
     except KeyError as e:
         return False, f'DataFrame not found: {e}'
+    
     selected_dfs_formatted = format_dfs_for_prompt(selected_dfs)
     python_code_str = ask_llm(prompt_python_code, user_query, selected_dfs_formatted)
+    python_code_str = "\n".join(
+        line for line in python_code_str.splitlines() if not line.strip().startswith("```")
+    )
     return True, python_code_str, dfs
+
+def generate_improved_chart(improvement_query: str, code_str: str):
+    prompt = prompt_improve_code(improvement_query, code_str)
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    improved_code = response.choices[0].message.content.strip()
+    return True, improved_code, None
