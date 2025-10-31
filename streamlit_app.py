@@ -58,8 +58,9 @@ def show_code_expander(code_str):
         st.code(code_str)
 
 def show_history(chart_gen):
-    with st.expander("Show improvement history", expanded=False):
-        for i, entry in enumerate(chart_gen.get_history()):
+    with st.expander("Show history", expanded=False):
+        history = chart_gen.get_history()
+        for i, entry in enumerate(history):
             if i > 0:
                 st.markdown(f"---")
             if entry['improvement_query']:
@@ -72,7 +73,33 @@ def show_history(chart_gen):
                 chart_gen.current_code = entry['improved_code'] if entry['improved_code'] else entry['code']
                 st.session_state.show_improved = True
                 st.session_state.improvement_text_value = entry.get('improvement_query', '')
+                st.session_state.history_index = i
                 st.rerun()
+
+def show_version_navigation(chart_gen):
+    history = chart_gen.get_history()
+    if "history_index" not in st.session_state:
+        st.session_state.history_index = len(history) - 1
+    col_prev, col_next = st.columns([1, 1])
+    with col_prev:
+        if st.button("Prev", key="prev_btn", use_container_width=True, disabled=st.session_state.history_index <= 0):
+            st.session_state.history_index = max(0, st.session_state.history_index - 1)
+            entry = history[st.session_state.history_index]
+            chart_gen.current_code = entry['improved_code'] if entry['improved_code'] else entry['code']
+            st.session_state.show_improved = True
+            st.session_state.improvement_text_value = entry.get('improvement_query', '')
+            st.rerun()
+    with col_next:
+        if st.button("Next", key="next_btn", use_container_width=True, disabled=st.session_state.history_index >= len(history) - 1):
+            st.session_state.history_index = min(len(history) - 1, st.session_state.history_index + 1)
+            entry = history[st.session_state.history_index]
+            chart_gen.current_code = entry['improved_code'] if entry['improved_code'] else entry['code']
+            st.session_state.show_improved = True
+            st.session_state.improvement_text_value = entry.get('improvement_query', '')
+            st.rerun()
+    # Show info about current version
+    entry = history[st.session_state.history_index]
+    st.markdown(f"{st.session_state.history_index + 1}/{len(history)} - {entry['improvement_query'] if entry['improvement_query'] else st.session_state.query}")
 
 if "chart_gen" not in st.session_state:
     st.session_state.chart_gen = ChartCodeGenerator()
@@ -91,9 +118,16 @@ else:
         success, response_str, dfs = chart_gen.generate_chart_code(st.session_state.query)
         st.session_state.last_code = response_str if success else None
         st.session_state.last_dfs = dfs if success else None
+        # Reset history index to latest
+        if "history_index" in st.session_state:
+            del st.session_state["history_index"]
     else:
         success = True
-        response_str = chart_gen.current_code
+        # Use selected version if navigating, else latest
+        history = chart_gen.get_history()
+        idx = st.session_state.get("history_index", len(history) - 1)
+        entry = history[idx]
+        response_str = entry['improved_code'] if entry['improved_code'] else entry['code']
         dfs = chart_gen.dfs
 
     if success:
@@ -101,9 +135,12 @@ else:
         col2 = execute_and_display_chart(code_str)
         with col2:
             improvement_form(chart_gen)
-            try_again_btn('default')
-            restart_btn()
-        show_code_expander(code_str)
+            show_version_navigation(chart_gen)
+            btn_l, btn_r = st.columns(2)
+            with btn_l:
+                try_again_btn('default')
+            with btn_r:
+                restart_btn()
         show_history(chart_gen)
     else:
         st.write('There was an error, try again. Code: 002.')
