@@ -34,7 +34,7 @@ def format_dfs_for_prompt(dfs):
 def ask_llm(prompt_func, *args):
     prompt = prompt_func(*args)
     response = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
     )
     return response.choices[0].message.content.strip()
@@ -56,18 +56,18 @@ class ChartCodeGenerator:
         relevant_dfs_str = ask_llm(prompt_relevant_dfs, user_query, dfs_formatted)
 
         if relevant_dfs_str == 'error':
-            return False, 'The query must be about chart creation'
+            return False, 'The query must be about chart creation', None
 
         try:
             relevant_dfs = ast.literal_eval(relevant_dfs_str)
         except Exception as e:
-            return False, f'LLM malfunction: {e}'
+            return False, f'LLM malfunction: {e}', None
 
         self.current_relevant_dfs = relevant_dfs
         try:
             selected_dfs = {df_key: self.dfs[df_key] for df_key in relevant_dfs}
         except KeyError as e:
-            return False, f'DataFrame not found: {e}'
+            return False, f'DataFrame not found: {e}', None
 
         self.current_selected_dfs = selected_dfs
         selected_dfs_formatted = format_dfs_for_prompt(selected_dfs)
@@ -89,7 +89,7 @@ class ChartCodeGenerator:
 
     def improve_chart_code(self, improvement_query: str):
         if self.current_code is None or self.current_query is None or self.current_selected_dfs is None:
-            return False, 'No chart code to improve. Generate a chart first.'
+            return False, 'No chart code to improve. Generate a chart first.', None
 
         selected_dfs_formatted = format_dfs_for_prompt(self.current_selected_dfs)
         improved_code_str = ask_llm(
@@ -111,7 +111,7 @@ class ChartCodeGenerator:
             'improved_code': improved_code_str
         })
         self.current_code = improved_code_str
-        return True, improved_code_str
+        return True, improved_code_str, None
 
     def get_history(self):
         return self.history

@@ -41,6 +41,7 @@ def prompt_improve_code(user_query, dfs_formatted, code_generated, improvement_q
         "Do NOT use markdown code syntax (such as triple backticks or ```python) in your response. "
         "Comment all lines to explain your reasoning in creating them. "
         "If a chart cannot be created from the provided DataFrames, respond with and error explainig why not.\n\n"
+        "Important: This prompt is supposed to aid on the creation of charts. If the user question does not specifically ask for something that could be used to generate a chart, respond simply: error\n\n"
         f"Original User question: {user_query}\n\n"
         f"Sampled DataFrames:\n{dfs_formatted}\n\n"
         f"Original code:\n{code_generated}\n\n"
