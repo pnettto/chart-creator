@@ -15,6 +15,7 @@ def handle_query_input():
     if st.button("Submit", use_container_width=True) or (query and st.session_state.query_input):
         st.session_state.submitted = True
         st.session_state.query = query or st.session_state.query_input
+        st.session_state.code_generated = False
 
 def execute_and_display_chart(code_str):
     col1, col2 = st.columns([2, 1])
@@ -52,6 +53,7 @@ def restart_btn():
         st.session_state.query = ""
         st.session_state.improvement_text_value = ""
         st.session_state.show_improved = False
+        st.session_state.code_generated = False
 
 def show_code_expander(code_str):
     with st.expander("Show generated code", expanded=False):
@@ -115,12 +117,18 @@ else:
     chart_gen = st.session_state.chart_gen
 
     if not st.session_state.get("show_improved", False):
-        success, response_str, dfs = chart_gen.generate_chart_code(st.session_state.query)
-        st.session_state.last_code = response_str if success else None
-        st.session_state.last_dfs = dfs if success else None
-        # Reset history index to latest
-        if "history_index" in st.session_state:
-            del st.session_state["history_index"]
+        if not st.session_state.get("code_generated", False):
+            success, response_str, dfs = chart_gen.generate_chart_code(st.session_state.query)
+            st.session_state.last_code = response_str if success else None
+            st.session_state.last_dfs = dfs if success else None
+            st.session_state.code_generated = True
+            # Reset history index to latest
+            if "history_index" in st.session_state:
+                del st.session_state["history_index"]
+        else:
+            success = st.session_state.last_code is not None
+            response_str = st.session_state.last_code
+            dfs = st.session_state.last_dfs
     else:
         success = True
         # Use selected version if navigating, else latest
