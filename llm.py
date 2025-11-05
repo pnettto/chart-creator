@@ -111,28 +111,21 @@ class ChartCodeGenerator:
         
         return True, history_entry
 
-    def improve_chart_code(self, improvement_query: str):
+    def improve_chart_code(self, improvement_query: str, improvement_entry_index: int):
         if len(self.history) == 0:
             result = {
                 'error': 'No chart code to improve. Generate a chart first.'
             }
             return False, result
         
-        latest_entry = self.history[- 1]
+        base_entry = self.history[improvement_entry_index]
         prompt = compose_prompt(
             PROMPT_IMPROVE_CODE,
             ' / '.join([entry['query'] for entry in self.history]),
-            latest_entry['code'],
+            base_entry['code'],
             self.relevant_dfs_formatted,
             improvement_query
         )
-        print('IMPROVEMENT PROMPT', prompt)
-        # prompt = compose_prompt(
-        #     PROMPT_IMPROVE_CODE,
-        #     improvement_query,
-        #     latest_entry,
-        #     self.relevant_dfs_formatted,
-        # )
 
         improved_code_str = ask_llm(prompt)
 #         improved_code_str = """

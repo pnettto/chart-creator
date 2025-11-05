@@ -48,27 +48,3 @@ def PROMPT_IMPROVE_CODE(user_query, code_generated, dfs_formatted, improvement_q
         f"User improvement request: {improvement_query}\n\n"
     )
     return prompt
-
-# def PROMPT_IMPROVE_CODE(improvement_query, latest_entry, relevant_dfs_formatted):
-#     prompt = (
-#         "### Instructions\n\n"
-#         "You are tasked with improving Python code for a Streamlit chart based on user feedback.\n"
-#         "- Focus solely on improving the latest version of the code.\n"
-#         "- Implement the requested improvement clearly and directly.\n"
-#         "- Use only the provided libraries: pandas (pd), numpy (np), Streamlit (st), Altair (alt), and prophet.  DO NOT add imports for them or anything else. \n"
-#         "- DataFrames are accessed as dfs['dataframe_name']. Always use this format.\n"
-#         "- Output charts using st.altair_chart only. Avoid other Streamlit functions like st.write or st.table.\n"
-#         "- Return clean, executable Python code without explanations, comments, or markdown syntax.\n\n"
-#         "### Latest Version (Base for Improvement)\n"
-#     )
-
-#     prompt += (
-#         f"- Query: {latest_entry['query']}\n"
-#         f"- Code: {latest_entry['code']}\n\n"
-#         "### Improvement Request\n"
-#         f"{improvement_query}\n\n"
-#         "### Relevant DataFrames\n"
-#         f"{relevant_dfs_formatted}"
-#     )
-
-#     return prompt

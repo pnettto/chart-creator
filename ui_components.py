@@ -7,6 +7,8 @@ import prophet
 import streamlit as st
 
 from constants import (
+    ENTRY_HISTORY_INDEX,
+    IMPROVEMENT_ENTRY_INDEX,
     IMPROVEMENT_QUERY,
 )
 
@@ -40,15 +42,41 @@ def render_chart(entry, dfs) -> None:
                 st.rerun()
 
 
-def render_improvement_form() -> None:
-    def update_improvement_query():
+def render_improvement_form(improvement_entry_index) -> None:
+    st.text_area("Ask for an improvement", key='current_improvement_query_value', height=200)
+    if st.button("Submit", width='stretch'):
         st.session_state[IMPROVEMENT_QUERY] = st.session_state['current_improvement_query_value']
-        st.session_state['trigger_rerun_improvement'] = True
-
-    st.text_area("Ask for an improvement", key='current_improvement_query_value')
-    if st.button("Submit"):
-        update_improvement_query()
-
-    if st.session_state.get('trigger_rerun_improvement', False):
-        st.session_state['trigger_rerun_improvement'] = False 
+        st.session_state[IMPROVEMENT_ENTRY_INDEX] = improvement_entry_index
+        st.session_state[ENTRY_HISTORY_INDEX] = None
         st.rerun()
+
+def render_version_navigation(history, current_index) -> None:
+    """Prev/Next navigation for code versions with current version info."""
+    col_prev, col_next = st.columns([1, 1])
+    with col_prev:
+        if st.button("Prev", key="prev_btn", disabled=current_index is 0, width='stretch'):
+            st.session_state[ENTRY_HISTORY_INDEX] = current_index - 1
+            st.rerun()
+    with col_next:
+        if st.button("Next", key="next_btn", disabled=current_index >= len(history) - 1, width='stretch'):
+            st.session_state[ENTRY_HISTORY_INDEX] = current_index + 1
+            st.rerun()
+
+    current_entry = history[current_index]
+    st.markdown(f"{current_index + 1}/{len(history)} - {current_entry['query']}")
+
+def render_history(history, dfs) -> None:
+    with st.expander("Show history", expanded=False):
+        for i, entry in enumerate(history):
+            if i > 0:
+                st.markdown("---")
+            st.markdown(f"{'Improvement' if i > 0 else 'Original query'}: {entry['query']}")
+            
+            render_chart(entry, dfs)
+            
+            with st.expander("Show generated code", expanded=False):
+                st.code(entry["code"])
+            
+            if st.button(f"Recover", key=f"recover_{i}"):
+                st.session_state[ENTRY_HISTORY_INDEX] = i
+                st.rerun()
