@@ -1,4 +1,4 @@
-def prompt_relevant_dfs(user_query, dfs_formatted):
+def PROMPT_RELEVANT_DFS(user_query, dfs_formatted):
     return (
         "You are given several sampled DataFrames from CSV files (random rows, to help understand the content as a whole). "
         "Your task is to determine which DataFrames are needed to answer the user's question. "
@@ -13,7 +13,7 @@ def prompt_relevant_dfs(user_query, dfs_formatted):
         f"Sampled DataFrames:\n{dfs_formatted}\n\n"
     )
 
-def prompt_python_code(user_query, dfs_formatted):
+def PROMPT_PYTHON_CODE(user_query, dfs_formatted):
     return (
         "Given several sampled DataFrames from CSV files, your task is to generate ONLY the Python code to create a Streamlit chart that answers the user's question. "
         "Each DataFrame is loaded as dfs['dataframe_name'], so never use the dataframe name directly, always use it as a key of the dfs dict."
@@ -21,13 +21,13 @@ def prompt_python_code(user_query, dfs_formatted):
         "You must always create charts using st.altair_chart. Any kind of Altair chart (bar, line, scatter, etc.) may be used as appropriate. "
         "Return only executable Python code—no explanations, comments, or markdown code blocks. "
         "Do NOT use markdown code syntax (such as triple backticks or ```python) in your response. "
-        "Comment all lines to explain your reasoning in creating them. "
+        "Comment each line to explain your reasoning for the changes made but keep it very short. "
         "If a chart cannot be created from the provided DataFrames, respond with and error explainig why not.\n\n"
         f"User question: {user_query}\n\n"
         f"Sampled DataFrames:\n{dfs_formatted}\n\n"
     )
 
-def prompt_improve_code(user_query, dfs_formatted, code_generated, improvement_query):
+def PROMPT_IMPROVE_CODE(user_query, code_generated, dfs_formatted, improvement_query):
     prompt = (
         "You are given Python code that generates a Streamlit chart. "
         "The user wants to improve the chart in a specific way. "
@@ -39,12 +39,36 @@ def prompt_improve_code(user_query, dfs_formatted, code_generated, improvement_q
         "Do not add import statements. Return only executable Python code—no explanations, comments, or markdown code blocks. "
         "Return only executable Python code—no explanations, comments, or markdown code blocks. "
         "Do NOT use markdown code syntax (such as triple backticks or ```python) in your response. "
-        "Comment all lines to explain your reasoning in creating them. "
-        "If a chart cannot be created from the provided DataFrames, respond with and error explainig why not.\n\n"
-        "Important: This prompt is supposed to aid on the creation of charts. If the user question does not specifically ask for something that could be used to generate a chart, respond simply: error\n\n"
-        f"Original User question: {user_query}\n\n"
+        "Make very short comments at all lines to explain your reasoning in creating them, but never create a comment block at the start.    "
+        "If a chart cannot be created from the provided DataFrames, respond with and error explainig why not."
+        # "Important: you are supposed to aid on the improvement of charts. If the user question does not specifically ask for something that could be used to improve a chart or otherwise visualize data, respond simply: error\n\n"
+        f"Original user query and past improvement queries (separated by /): {user_query}\n\n"
+        f"Latest generated code:\n{code_generated}\n\n"
         f"Sampled DataFrames:\n{dfs_formatted}\n\n"
-        f"Original code:\n{code_generated}\n\n"
         f"User improvement request: {improvement_query}\n\n"
     )
     return prompt
+
+# def PROMPT_IMPROVE_CODE(improvement_query, latest_entry, relevant_dfs_formatted):
+#     prompt = (
+#         "### Instructions\n\n"
+#         "You are tasked with improving Python code for a Streamlit chart based on user feedback.\n"
+#         "- Focus solely on improving the latest version of the code.\n"
+#         "- Implement the requested improvement clearly and directly.\n"
+#         "- Use only the provided libraries: pandas (pd), numpy (np), Streamlit (st), Altair (alt), and prophet.  DO NOT add imports for them or anything else. \n"
+#         "- DataFrames are accessed as dfs['dataframe_name']. Always use this format.\n"
+#         "- Output charts using st.altair_chart only. Avoid other Streamlit functions like st.write or st.table.\n"
+#         "- Return clean, executable Python code without explanations, comments, or markdown syntax.\n\n"
+#         "### Latest Version (Base for Improvement)\n"
+#     )
+
+#     prompt += (
+#         f"- Query: {latest_entry['query']}\n"
+#         f"- Code: {latest_entry['code']}\n\n"
+#         "### Improvement Request\n"
+#         f"{improvement_query}\n\n"
+#         "### Relevant DataFrames\n"
+#         f"{relevant_dfs_formatted}"
+#     )
+
+#     return prompt

@@ -1,124 +1,96 @@
 from __future__ import annotations
 
-from typing import Dict, Tuple, Optional
-
-import altair as alt
-import numpy as np
+import os
 import pandas as pd
-import prophet
 import streamlit as st
 
 from llm import ChartCodeGenerator
 from constants import (
     CHART_GEN,
-    HISTORY_INDEX,
-    QUERY,
-    SUBMITTED,
+    ENTRY,
+    IMPROVEMENT_QUERY,
+    ORIGINAL_QUERY,
 )
 from ui_components import (
-    init_state,
-    render_header,
-    render_history,
+    render_chart,
     render_improvement_form,
-    render_query_input,
-    render_restart_btn,
-    render_version_navigation,
 )
 
+def load_dfs():
+    csv_folder = "./files"
+    dfs = {}
+    for filename in os.listdir(csv_folder):
+        if filename.endswith(".csv"):
+            filepath = os.path.join(csv_folder, filename)
+            name, _ = os.path.splitext(filename)
+            dfs[name] = pd.read_csv(filepath)
+    return dfs
 
-# =============================
-# App bootstrap
-# =============================
-st.set_page_config(page_title="Natural Chart Creator", layout="wide")
+# Load all available dfs
+all_dfs = load_dfs()
 
-
-# =============================
-# Chart execution
-# =============================
-def execute_and_display_chart(code_str: str, dfs: Dict[str, pd.DataFrame]) -> st.delta_generator.DeltaGenerator:
-    """Execute generated code safely with a restricted global context and show chart.
-
-    Returns the right-hand column container to render controls alongside the chart.
-    """
-    col_chart, col_controls = st.columns([2, 1])
-    with col_chart:
-        try:
-            # Restricted global context for exec
-            _globals = {
-                "alt": alt,
-                "np": np,
-                "pd": pd,
-                "prophet": prophet,
-                "st": st,
-                "dfs": dfs,
-            }
-            exec(code_str, _globals, {})
-        except Exception as e:
-            st.write("There was an error")
-            st.code(e)
-            if st.button("Fix error"):
-                chart_gen: ChartCodeGenerator = st.session_state[CHART_GEN]
-                result = chart_gen.improve_chart_code(f"Error: {str(e)}")
-                success, response_str, dfs = result
-                if success and response_str and dfs is not None:
-                    execute_and_display_chart(response_str, dfs)
-                else:
-                    st.write("Error fixing attempt failed.")
-            
-    return col_controls
-
-
-# =============================
-# Main screen logic
-# =============================
-def get_current_code_and_dfs(chart_gen: ChartCodeGenerator) -> Tuple[bool, Optional[str], Optional[Dict[str, pd.DataFrame]]]:
-    history = chart_gen.get_history()
-
-    # If there's no history yet, generate the initial chart
-    if not history:
-        result = chart_gen.generate_chart_code(st.session_state[QUERY])
-        success, response_str, dfs = result
-        if not success:
-            return False, response_str, dfs
-        # Refresh history after generation and point index to the latest
-        history = chart_gen.get_history()
-        st.session_state[HISTORY_INDEX] = len(history) - 1
-
-    # Resolve the current entry
-    entry = history[st.session_state[HISTORY_INDEX]]
-
-    code_str = entry["improved_code"] if entry.get("improved_code") else entry["code"]
-    dfs = chart_gen.dfs
-    return True, code_str, dfs
-
+initial_chart_gen = ChartCodeGenerator(all_dfs=all_dfs)
 
 def render_main() -> None:
-    init_state()
-    render_header()
+    st.set_page_config(page_title="Natural Chart Creator", layout="wide")
+    st.title("Natural Chart Creator")
 
-    if not st.session_state[SUBMITTED]:
-        render_query_input()
+    if CHART_GEN not in st.session_state:
+        st.session_state[CHART_GEN] = initial_chart_gen
+    if ORIGINAL_QUERY not in st.session_state:
+        st.session_state[ORIGINAL_QUERY] = ""
+    if IMPROVEMENT_QUERY not in st.session_state:
+        st.session_state[IMPROVEMENT_QUERY] = ""
+
+    # Kick start the app by collecting a query
+    if not st.session_state[ORIGINAL_QUERY]:
+        def update_query():
+            st.session_state[ORIGINAL_QUERY] = st.session_state['query_value']
+
+        st.text_input("Enter your query", key='query_value')
+        st.button("Submit", width='stretch', on_click=update_query)
         return
 
-    # Submitted flow
-    st.write(f"Query: {st.session_state[QUERY]}")
-    chart_gen: ChartCodeGenerator = st.session_state[CHART_GEN]
+    # Show original query at top
+    (f"Original query: {st.session_state[ORIGINAL_QUERY]}")
 
-    success, code_str, dfs = get_current_code_and_dfs(chart_gen)
-    if success and code_str and dfs is not None:
-        controls_col = execute_and_display_chart(code_str, dfs)
-        with controls_col:
-            render_improvement_form(chart_gen)
-            render_version_navigation(chart_gen)
-            render_restart_btn()
-        render_history(chart_gen)
+    # Control variables
+    chart_gen = st.session_state[CHART_GEN]
+    history_count = len(chart_gen.history)
+    latest_entry = chart_gen.history[-1] if history_count > 0 else None
+    current_entry = None
+    improvement_query = st.session_state[IMPROVEMENT_QUERY]
+
+    if history_count == 0:
+        # Generate a chart to kick-start the session
+        success, result = chart_gen.generate_chart_code(st.session_state[ORIGINAL_QUERY])
+        if success:
+            current_entry = result
+        else:
+            st.error(result['error'])
+            current_entry = latest_entry
+    elif history_count == 1 and not improvement_query:
+        current_entry = latest_entry
+    elif improvement_query and improvement_query != latest_entry['query']:
+        success, result = chart_gen.improve_chart_code(improvement_query)
+        if success:
+            current_entry = result
+        else:
+            st.error(result['error'])
+            current_entry = latest_entry
     else:
-        st.write("There was an error, try again.")
-        if code_str:
-            st.code(code_str)
-            render_restart_btn()
+        current_entry = latest_entry
 
-
+    if current_entry:
+        col_l, col_r = st.columns([3, 1])
+        with col_l:
+            render_chart(current_entry, chart_gen.all_dfs)
+        with col_r:
+            render_improvement_form()
+    
+    if current_entry is not None:
+        st.code(current_entry['code'])
+    st.write(chart_gen.history)
 
 if __name__ == "__main__":
     render_main()
