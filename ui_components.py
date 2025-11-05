@@ -72,7 +72,7 @@ def render_version_navigation(history, current_index) -> None:
     st.markdown(f"{current_index + 1}/{len(history)} - {current_entry['query']}")
 
 def render_history(history, dfs) -> None:
-    if (len(history) < 2):
+    if (len(history) == 0):
         return
     st.write('---')
     st.write('### History')

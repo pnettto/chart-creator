@@ -56,32 +56,41 @@ def render_main() -> None:
         st.session_state[IMPROVEMENT_ENTRY_INDEX] = None
     if IMPROVEMENT_QUERY not in st.session_state:
         st.session_state[IMPROVEMENT_QUERY] = ""
+    
+    chart_gen = st.session_state[CHART_GEN]
+    entry_history_index = st.session_state[ENTRY_HISTORY_INDEX] # Selected from navigation and history
+    improvement_entry_index = st.session_state[IMPROVEMENT_ENTRY_INDEX]
+    improvement_query = st.session_state[IMPROVEMENT_QUERY]
 
     # Start the app by collecting a query
     if not st.session_state[ORIGINAL_QUERY]:
-        def execute_original_query():
-            st.session_state[ORIGINAL_QUERY] = st.session_state['query_value']
-            st.session_state['trigger_execute_original_query'] = True
+        col_l, col_r = st.columns([2, 1])
+        with col_l:
+            def execute_original_query():
+                st.session_state[ORIGINAL_QUERY] = st.session_state['query_value']
+                st.session_state['trigger_execute_original_query'] = True
 
-        st.text_input("Enter your query", key='query_value')
-        if st.button("Submit", width='stretch', key="query_button"):
-            execute_original_query()
+            st.text_input("Enter your query", key='query_value')
+            if st.button("Submit", width='stretch', key="query_btn"):
+                execute_original_query()
 
-        if st.session_state.get('trigger_execute_original_query', False):
-            st.session_state['trigger_execute_original_query'] = False
-            st.rerun()
+            if st.session_state.get('trigger_execute_original_query', False):
+                st.session_state['trigger_execute_original_query'] = False
+                st.rerun()
 
+        with col_r:
+            # Move "Get prompt ideas" button further down the page
+            st.markdown("<div style='height: 85px;'></div>", unsafe_allow_html=True)
+            if st.button("Get prompt ideas", key="prompt_ideas_btn"):
+                prompt_ideas = chart_gen.generate_prompt_ideas()
+                if prompt_ideas:
+                    st.markdown('### Prompt ideas')
+                    st.markdown(prompt_ideas)
         return
 
     # Show original query at top
     (f"Original query: {st.session_state[ORIGINAL_QUERY]}")
 
-    # Session variables
-    chart_gen = st.session_state[CHART_GEN]
-    entry_history_index = st.session_state[ENTRY_HISTORY_INDEX] # Selected from navigation and history
-    improvement_entry_index = st.session_state[IMPROVEMENT_ENTRY_INDEX]
-    improvement_query = st.session_state[IMPROVEMENT_QUERY]
-    
     # Other control variables
     history_count = len(chart_gen.history)
     latest_entry = chart_gen.history[-1] if history_count > 0 else None

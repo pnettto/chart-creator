@@ -41,10 +41,25 @@ def PROMPT_IMPROVE_CODE(user_query, code_generated, dfs_formatted, improvement_q
         "Do NOT use markdown code syntax (such as triple backticks or ```python) in your response. "
         "Make very short comments at all lines to explain your reasoning in creating them, but never create a comment block at the start.    "
         "If a chart cannot be created from the provided DataFrames, respond with and error explainig why not."
-        # "Important: you are supposed to aid on the improvement of charts. If the user question does not specifically ask for something that could be used to improve a chart or otherwise visualize data, respond simply: error\n\n"
+        "Important: you are supposed to aid on the improvement of charts. If the user question does not specifically ask for something that could be used to improve a chart or otherwise visualize data, respond simply: error\n\n"
         f"Original user query and past improvement queries (separated by /): {user_query}\n\n"
         f"Latest generated code:\n{code_generated}\n\n"
         f"Sampled DataFrames:\n{dfs_formatted}\n\n"
         f"User improvement request: {improvement_query}\n\n"
     )
     return prompt
+
+def PROMPT_IDEAS(dfs_formatted):
+    return (
+        "List 10 prompts I could give an AI to explore the data in the sampled Dataframes, by creating a kind of chart. "
+        "The prompt must be about chart creation. "
+        "Make the prompt approachable and understandable for humans, though it's meant to an LLM. "
+        "Add a component of interest or fun. "
+        "It's ok to join dataframes if that would contribute to a more interesting exploraton. "
+        "Answer in markdown format (only the bullet point list) and keep the prompts rather short (one sentence). \n\n"
+        "The output format must be a markdowb bullet point list like this:"
+        "Prompt 1: .... \n"
+        "Prompt 2: .... \n"
+        "Etc \n\n"
+        f"Sampled DataFrames:\n{dfs_formatted}\n\n"
+    )
