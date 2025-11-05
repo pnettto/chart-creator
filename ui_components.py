@@ -58,10 +58,9 @@ def render_improvement_form(improvement_entry_index) -> None:
         st.rerun()
 
 def render_version_navigation(history, current_index) -> None:
-    """Prev/Next navigation for code versions with current version info."""
     col_prev, col_next = st.columns([1, 1])
     with col_prev:
-        if st.button("Prev", key="prev_btn", disabled=current_index is 0, width='stretch'):
+        if st.button("Prev", key="prev_btn", disabled=current_index == 0, width='stretch'):
             st.session_state[ENTRY_HISTORY_INDEX] = current_index - 1
             st.rerun()
     with col_next:
