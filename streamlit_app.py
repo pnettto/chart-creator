@@ -59,9 +59,18 @@ def render_main() -> None:
 
     # Start the app by collecting a query
     if not st.session_state[ORIGINAL_QUERY]:
-        st.text_input("Enter your query", key='query_value')
-        if st.button("Submit", width='stretch'):
+        def execute_original_query():
             st.session_state[ORIGINAL_QUERY] = st.session_state['query_value']
+            st.session_state['trigger_execute_original_query'] = True
+
+        st.text_input("Enter your query", key='query_value')
+        if st.button("Submit", width='stretch', key="query_button"):
+            execute_original_query()
+
+        if st.session_state.get('trigger_execute_original_query', False):
+            st.session_state['trigger_execute_original_query'] = False
+            st.rerun()
+
         return
 
     # Show original query at top

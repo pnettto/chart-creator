@@ -43,11 +43,18 @@ def render_chart(entry, dfs) -> None:
 
 
 def render_improvement_form(improvement_entry_index) -> None:
-    st.text_area("Ask for an improvement", key='current_improvement_query_value', height=200)
-    if st.button("Submit", width='stretch'):
+    def request_improvement():
         st.session_state[IMPROVEMENT_QUERY] = st.session_state['current_improvement_query_value']
         st.session_state[IMPROVEMENT_ENTRY_INDEX] = improvement_entry_index
         st.session_state[ENTRY_HISTORY_INDEX] = None
+        st.session_state['trigger_request_improvement'] = True
+
+    st.text_area("Ask for an improvement", key='current_improvement_query_value', height=200)
+    if st.button("Submit", width='stretch', key="current_improvement_query_btn"):
+        request_improvement()
+
+    if st.session_state.get('trigger_request_improvement', False):
+        st.session_state['trigger_request_improvement'] = False 
         st.rerun()
 
 def render_version_navigation(history, current_index) -> None:
@@ -66,17 +73,20 @@ def render_version_navigation(history, current_index) -> None:
     st.markdown(f"{current_index + 1}/{len(history)} - {current_entry['query']}")
 
 def render_history(history, dfs) -> None:
-    with st.expander("Show history", expanded=False):
-        for i, entry in enumerate(history):
-            if i > 0:
-                st.markdown("---")
-            st.markdown(f"{'Improvement' if i > 0 else 'Original query'}: {entry['query']}")
-            
-            render_chart(entry, dfs)
-            
-            with st.expander("Show generated code", expanded=False):
-                st.code(entry["code"])
-            
-            if st.button(f"Recover", key=f"recover_{i}"):
-                st.session_state[ENTRY_HISTORY_INDEX] = i
-                st.rerun()
+    if (len(history) < 2):
+        return
+    st.write('---')
+    st.write('### History')
+    for i, entry in enumerate(history):
+        if i > 0:
+            st.markdown("---")
+        st.markdown(f"{'Improvement' if i > 0 else 'Original query'}: {entry['query']}")
+        
+        render_chart(entry, dfs)
+        
+        with st.expander("Show generated code", expanded=False):
+            st.code(entry["code"])
+        
+        if st.button(f"Recover", key=f"recover_{i}"):
+            st.session_state[ENTRY_HISTORY_INDEX] = i
+            st.rerun()
