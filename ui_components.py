@@ -56,17 +56,3 @@ def render_improvement_form(improvement_entry_index) -> None:
     if st.session_state.get('trigger_request_improvement', False):
         st.session_state['trigger_request_improvement'] = False 
         st.rerun()
-
-def render_version_navigation(history, current_index) -> None:
-    col_prev, col_next = st.columns([1, 1])
-    with col_prev:
-        if st.button("Prev", key="prev_btn", disabled=current_index == 0, width='stretch'):
-            st.session_state[ENTRY_HISTORY_INDEX] = current_index - 1
-            st.rerun()
-    with col_next:
-        if st.button("Next", key="next_btn", disabled=current_index >= len(history) - 1, width='stretch'):
-            st.session_state[ENTRY_HISTORY_INDEX] = current_index + 1
-            st.rerun()
-
-    current_entry = history[current_index]
-    st.markdown(f"{current_index + 1}/{len(history)} - {current_entry['query']}")

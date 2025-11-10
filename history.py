@@ -6,6 +6,7 @@ from streamlit_js_eval import streamlit_js_eval
 
 from constants import (
     ENTRY_HISTORY_INDEX,
+    IMPROVEMENT_QUERY,
     LOCAL_STORAGE_HISTORY,
     ORIGINAL_QUERY,
 )
@@ -13,6 +14,22 @@ from constants import (
 from ui_components import (
     render_chart
 )
+
+def render_version_navigation(history, current_index) -> None:
+    col_prev, col_next = st.columns([1, 1])
+    with col_prev:
+        if st.button("Prev", key="prev_btn", disabled=current_index == 0, width='stretch'):
+            st.session_state[ENTRY_HISTORY_INDEX] = current_index - 1
+            st.session_state[IMPROVEMENT_QUERY] = ""
+            st.rerun()
+    with col_next:
+        if st.button("Next", key="next_btn", disabled=current_index >= len(history) - 1, width='stretch'):
+            st.session_state[ENTRY_HISTORY_INDEX] = current_index + 1
+            st.session_state[IMPROVEMENT_QUERY] = ""
+            st.rerun()
+
+    current_entry = history[current_index]
+    st.markdown(f"{current_index + 1}/{len(history)} - {current_entry['query']}")
 
 def render_chart_history(history, dfs) -> None:
     if (len(history) == 0):
@@ -42,7 +59,6 @@ def sync_local_storage_history_to_session():
     )
     if result is None:
         st.session_state[LOCAL_STORAGE_HISTORY] = None
-        st.rerun()
     else:
         st.session_state[LOCAL_STORAGE_HISTORY] = result
 
@@ -59,9 +75,8 @@ def render_local_storage_history_recovering_tool_load(chart_gen):
         history = []
 
     if history:
-        col_l, _ = st.columns([3, 1])
+        col_l, _ = st.columns([2, 1])
         with col_l:
-            st.markdown('---')
             st.markdown('### Load a previous exploration')
             selected_index = st.selectbox(
                 label="Select",
@@ -90,9 +105,9 @@ def render_local_storage_recovering_tool_save(chart_gen):
             "history": chart_gen.history,
         }
 
-        history.sort(key=lambda x: x["date"], reverse=True)
 
         history.append(new_history_data)
+        history.sort(key=lambda x: x["date"], reverse=True)
         safe_history_json = json.dumps(history)
         escaped_json = safe_history_json.replace("\\", "\\\\").replace("'", "\\'")
         st.success("Saved")
