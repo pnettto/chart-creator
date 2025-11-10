@@ -70,22 +70,3 @@ def render_version_navigation(history, current_index) -> None:
 
     current_entry = history[current_index]
     st.markdown(f"{current_index + 1}/{len(history)} - {current_entry['query']}")
-
-def render_history(history, dfs) -> None:
-    if (len(history) == 0):
-        return
-    st.write('---')
-    st.write('### History')
-    for i, entry in enumerate(history):
-        if i > 0:
-            st.markdown("---")
-        st.markdown(f"{'Improvement' if i > 0 else 'Original query'}: {entry['query']}")
-        
-        render_chart(entry, dfs)
-        
-        with st.expander("Show generated code", expanded=False):
-            st.code(entry["code"])
-        
-        if st.button(f"Recover", key=f"recover_{i}"):
-            st.session_state[ENTRY_HISTORY_INDEX] = i
-            st.rerun()

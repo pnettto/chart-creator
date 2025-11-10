@@ -4,7 +4,8 @@
 CHART_GEN = "chart_gen"
 ENTRY = "entry"
 ENTRY_HISTORY_INDEX = "history_entry"
-ORIGINAL_QUERY = "query"
+LOCAL_STORAGE_HISTORY = 'history'
+HISTORY_INDEX = "history_index"
 IMPROVEMENT_ENTRY_INDEX = "improvement_entry_index"
 IMPROVEMENT_QUERY = "improvement_text_value"
-HISTORY_INDEX = "history_index"
+ORIGINAL_QUERY = "query"
